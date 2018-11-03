@@ -1,5 +1,11 @@
 from flask import Flask, render_template, jsonify
 import requests
+from settings import config
+from pymongo import MongoClient
+
+
+db_cli = MongoClient(config.MONGODB_HOST)
+db = db_cli[config.MONGODB_NAME]
 
 
 app = Flask(__name__)
