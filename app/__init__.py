@@ -41,7 +41,7 @@ def get_menu():
     return jsonify(success=1, data=r.json())
 
 
-@app.route('/order')
+@app.route('/order', methods=["POST"])
 @error_handler
 def order():
     meat_name = request.values.get("meat_name")
@@ -63,11 +63,13 @@ def order():
         "person_name": person_name,
         "price": price,
         "order_time": datetime.datetime.now(),
+        "order_type": 1,
         "_id": int(time.time())
     }
     if meat_name:
         order.update(
-            meat_name=meat_name
+            meat_name=meat_name,
+            order_type=2,
         )
     db.orders.save(order)
     return jsonify(success=1, data=order)

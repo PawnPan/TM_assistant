@@ -2,10 +2,143 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta name="format-detection" content="telephone=no">
   <title>TM_assistant</title>
+  <script src="https://cdn.bootcss.com/vue/2.5.17/vue.min.js"></script>
+  <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+  <style>
+    .item {
+      float: left;
+      margin: 20px;
+      padding: 10px;
+      text-align: center;
+      border: 2px solid rgba(0,0,0,0);
+    }
+
+    .item.active {
+      border: 2px solid orange;
+    }
+
+    .item>img {
+      width: 100px;
+    }
+  </style>
 </head>
 <body>
-hello
-
+<div id="app">
+  <div id="jk">
+    <div>健康餐</div>
+    <div v-for="item in jkList" class="item" v-bind:class="{'active': item == selectedJk}" @click="onJkItemClick(item)">
+      <img :src="item.pic">
+      <div v-text="item.name"></div>
+      <div v-text="'￥' + item.price"></div>
+    </div>
+    <div style="clear: both;"></div>
+  </div>
+  <div id="xt">
+    <div>纤体餐</div>
+    <div v-for="item in xtList" class="item" v-bind:class="{'active': item == selectedXt}" @click="onXtItemClick(item)">
+      <img :src="item.pic">
+      <div v-text="item.name"></div>
+      <div v-text="'￥' + item.price"></div>
+    </div>
+    <div style="clear: both;"></div>
+  </div>
+  <div>
+    你是谁呀：<input v-model="userName" type="text">
+    <button @click="submit">提交</button>
+  </div>
+</div>
 </body>
+<script>
+  var app = new Vue({
+    el: "#app",
+    data: {
+      jkList: [],
+      xtList: [],
+      selectedJk: null,
+      selectedXt: null,
+      userName: ""
+    },
+    computed: {
+
+    },
+    methods: {
+      onJkItemClick: function(item) {
+        var self = this;
+        if (self.selectedJk === item) {
+          self.selectedJk = null;
+        } else {
+          self.selectedJk = item;
+        }
+      },
+      onXtItemClick: function(item) {
+        var self = this;
+        if (self.selectedXt === item) {
+          self.selectedXt = null;
+        } else {
+          self.selectedXt = item;
+        }
+      },
+      submit: function() {
+        var self = this;
+        if (!self.selectedXt) {
+          alert("素菜必须要点一个");
+          return ;
+        }
+        if (!self.userName) {
+          alert("你是谁呀");
+          return ;
+        }
+
+        var to_submit = {
+          vege_name: self.selectedXt.name,
+          person_name: self.userName,
+          price: self.selectedXt.price,
+        };
+        if (self.selectedJk) {
+          to_submit.meat_name = self.selectedJk.name;
+          to_submit.price = self.selectedJk.price;
+        }
+        $.post("/order", to_submit, function(res) {
+          console.log(res);
+        })
+      },
+      init: function() {
+        var self = this;
+        var tmpJkList = [
+          {
+            "name": "椒盐大虾",
+            "price": 25,
+            "pic": "https://img.alicdn.com/bao/uploaded/i3/TB1Tf4LSpXXXXb1aXXXXXXXXXXX_!!2-item_pic.png",
+          },
+          {
+            "name": "台式三杯鸡",
+            "price": 25,
+            "pic": "https://img.alicdn.com/bao/uploaded/i3/84495163/TB1eU8DawkLL1JjSZFpXXa7nFXa_!!2-item_pic.png",
+          }
+        ];
+        self.jkList = tmpJkList;
+
+        var tmpXtList = [
+          {
+            "name": "干煸四季豆",
+            "price": 18,
+            "pic": "https://img.alicdn.com/bao/uploaded/i3/TB1oN1USpXXXXXxXpXXXXXXXXXX_!!2-item_pic.png",
+          },
+          {
+            "name": "莴笋肉片",
+            "price": 18,
+            "pic": "https://img.alicdn.com/bao/uploaded/i4/TB19CSqSpXXXXc9XVXXXXXXXXXX_!!2-item_pic.png",
+          }
+        ];
+        self.xtList = tmpXtList;
+      }
+    }
+  });
+
+  app.init();
+</script>
 </html>
