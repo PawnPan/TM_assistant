@@ -50,6 +50,26 @@
     你是谁呀：<input v-model="userName" type="text">
     <button @click="submit">提交</button>
   </div>
+  <table style="margin-top: 20px;" border="1">
+    <caption>已点菜单</caption>
+    <tr>
+      <th>点餐人</th>
+      <th>点餐内容</th>
+      <th>价格</th>
+    </tr>
+    <tr v-for="item in orders">
+      <td v-text="item.person_name"></td>
+      <td v-if="item.order_type == 1" v-text="item.vege_name"></td>
+      <td v-else-if="item.order_type == 2" v-text="item.meat_name + '+' + item.vege_name"></td>
+      <td v-else>出错啦</td>
+      <td v-text="item.price + '元'"></td>
+    </tr>
+  </table>
+
+  <div>
+    <div>点餐tip</div>
+    <div v-for="text in tipText" v-text="text"></div>
+  </div>
 </div>
 </body>
 <script>
@@ -58,11 +78,60 @@
     data: {
       jkList: [],
       xtList: [],
+      orders: [],
       selectedJk: null,
       selectedXt: null,
       userName: ""
     },
     computed: {
+      tipText: function() {
+        var self = this;
+        var jkObj = {};
+        var xtObj = {};
+        var jkVegeObj = {};
+        for (var i = 0; i != self.orders.length; i ++) {
+          var tmpOrder = self.orders[i];
+
+          if (tmpOrder.order_type == 1) {
+            if (xtObj[tmpOrder.vege_name]) {
+              xtObj[tmpOrder.vege_name] ++ ;
+            } else {
+              xtObj[tmpOrder.vege_name] = 1;
+            }
+          } else if (tmpOrder.order_type == 2) {
+            if (jkObj[tmpOrder.meat_name]) {
+              jkObj[tmpOrder.meat_name] ++;
+            } else {
+              jkObj[tmpOrder.meat_name] = 1;
+            }
+            if (jkVegeObj[tmpOrder.vege_name]) {
+              jkVegeObj[tmpOrder.vege_name] ++ ;
+            } else {
+              jkVegeObj[tmpOrder.vege_name] = 1;
+            }
+          }
+        }
+        var jkText = "";
+        Object.keys(jkObj).forEach(function(k) {
+          jkText = jkText + k + "：" + jkObj[k] + "份，";
+        });
+        var xtText = "";
+        Object.keys(xtObj).forEach(function(k) {
+          xtText = xtText + k + "：" + xtObj[k] + "份，";
+        });
+        var jkVegeText = "";
+        Object.keys(jkVegeObj).forEach(function(k) {
+          jkVegeText = jkVegeText + k + "：" + jkVegeObj[k] + "份，";
+        });
+
+        return [
+          "共需点健康餐：" + jkText,
+          "共需点纤体餐：" + xtText,
+          "（下面这行可以直接复制粘到订单备注中）",
+          "健康餐的半荤：" + jkVegeText
+          ]
+
+      }
 
     },
     methods: {
@@ -103,38 +172,50 @@
           to_submit.price = self.selectedJk.price;
         }
         $.post("/order", to_submit, function(res) {
-          console.log(res);
+          self.getOrders();
+          alert("提交成功");
+        })
+      },
+      getOrders: function() {
+        var self = this;
+        $.get("/get_orders", function(res) {
+          self.orders = res.data;
         })
       },
       init: function() {
         var self = this;
-        var tmpJkList = [
-          {
-            "name": "椒盐大虾",
-            "price": 25,
-            "pic": "https://img.alicdn.com/bao/uploaded/i3/TB1Tf4LSpXXXXb1aXXXXXXXXXXX_!!2-item_pic.png",
-          },
-          {
-            "name": "台式三杯鸡",
-            "price": 25,
-            "pic": "https://img.alicdn.com/bao/uploaded/i3/84495163/TB1eU8DawkLL1JjSZFpXXa7nFXa_!!2-item_pic.png",
+        $.get("get_menu", function(res) {
+          console.log(res);
+          for (var i = 0; i != res.data.length; i ++) {
+            var tmp_repo = res.data[i];
+            if (tmp_repo.name == "团妈健康餐（午）") {
+              var foods = [];
+              for (var j = 0; j != tmp_repo.foods.length; j ++) {
+                var tmp_food = tmp_repo.foods[j];
+                var food = {
+                  name: tmp_food.name,
+                  price: tmp_food.specfoods[0].price,
+                  pic: "//fuss10.elemecdn.com/a/f2/" + tmp_food.photos[0] + "?imageMogr2/thumbnail/200x200/format/webp/quality/85",
+                };
+                foods.push(food);
+              }
+              self.jkList = foods;
+            } else if (tmp_repo.name = "团妈纤体餐（午）" && tmp_repo.description.indexOf("套餐") >= 0) {
+              var foods = [];
+              for (var j = 0; j != tmp_repo.foods.length; j ++) {
+                var tmp_food = tmp_repo.foods[j];
+                var food = {
+                  name: tmp_food.name,
+                  price: tmp_food.specfoods[0].price,
+                  pic: "//fuss10.elemecdn.com/a/f2/" + tmp_food.photos[0],
+                };
+                foods.push(food);
+              }
+              self.xtList = foods;
+            }
           }
-        ];
-        self.jkList = tmpJkList;
-
-        var tmpXtList = [
-          {
-            "name": "干煸四季豆",
-            "price": 18,
-            "pic": "https://img.alicdn.com/bao/uploaded/i3/TB1oN1USpXXXXXxXpXXXXXXXXXX_!!2-item_pic.png",
-          },
-          {
-            "name": "莴笋肉片",
-            "price": 18,
-            "pic": "https://img.alicdn.com/bao/uploaded/i4/TB19CSqSpXXXXc9XVXXXXXXXXXX_!!2-item_pic.png",
-          }
-        ];
-        self.xtList = tmpXtList;
+        });
+        self.getOrders();
       }
     }
   });
