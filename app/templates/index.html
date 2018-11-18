@@ -171,14 +171,14 @@
           to_submit.meat_name = self.selectedJk.name;
           to_submit.price = self.selectedJk.price;
         }
-        $.post("/order", to_submit, function(res) {
+        $.post("order", to_submit, function(res) {
           self.getOrders();
           alert("提交成功");
         })
       },
       getOrders: function() {
         var self = this;
-        $.get("/get_orders", function(res) {
+        $.get("get_orders", function(res) {
           self.orders = res.data;
         })
       },
