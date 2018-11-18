@@ -6,6 +6,7 @@ RUN set -xe && \
     pip install --no-cache-dir -r /tmp/requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 
 ADD app /code/app
+ADD settings.py /code/settings.py
 ADD wsgi.py /code/wsgi.py
 WORKDIR /code
 EXPOSE 8848
